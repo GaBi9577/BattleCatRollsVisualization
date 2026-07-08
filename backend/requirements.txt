@@ -1,0 +1,4 @@
+requests>=2.33
+beautifulsoup4>=4.14
+fastapi>=0.115
+uvicorn[standard]>=0.32

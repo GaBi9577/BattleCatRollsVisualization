@@ -41,3 +41,36 @@ export function splitEventsByDuration(events) {
 
   return { normalEvents, longTermEvents };
 }
+
+/**
+ * @param {string} dateRange - 例如 "2026-04-24 ~ 2030-01-01"
+ * @returns {string} 起始日期文字（未提供時回傳空字串）
+ */
+function getStartDateText(dateRange) {
+  if (!dateRange) return '';
+  const [startText] = dateRange.split('~').map((part) => part.trim());
+  return startText;
+}
+
+/**
+ * 把長期池 events 依「開頭檔期（起始日期）」分組，起始日期相同的歸為同一組。
+ * 保留 events 原本的相對順序（依第一次出現的起始日期排序分組）。
+ *
+ * @param {Array<{ value: string, date_range: string, title: string }>} events
+ * @returns {Array<Array>} 分組後的陣列，每個元素是一組 events（長度可能為 1，代表沒有同期活動）
+ */
+export function groupEventsByStartDate(events) {
+  const groupOrder = [];
+  const groupsByKey = new Map();
+
+  for (const event of events) {
+    const key = getStartDateText(event.date_range);
+    if (!groupsByKey.has(key)) {
+      groupsByKey.set(key, []);
+      groupOrder.push(key);
+    }
+    groupsByKey.get(key).push(event);
+  }
+
+  return groupOrder.map((key) => groupsByKey.get(key));
+}

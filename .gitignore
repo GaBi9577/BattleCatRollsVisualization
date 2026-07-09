@@ -5,3 +5,4 @@ __pycache__/
 backend.log
 .env.local
 dist/
+doc/

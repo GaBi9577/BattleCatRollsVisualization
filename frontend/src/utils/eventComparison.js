@@ -20,6 +20,26 @@ export function getOtherEventsForPosition(position, currentEventValue, cache, ev
 }
 
 /**
+ * 給定一個 position，從 cache 撈出「同組」其他 event 在該位置的 cell。
+ * 跟 getOtherEventsForPosition 不同的地方：比較對象不是全部 event，而是呼叫端
+ * 指定的一組 event（例如：開頭檔期相同的長期池活動），且不限稀有度。
+ *
+ * @param {string} position    - 例如 "1A"
+ * @param {Array}  mateEvents  - 同組的其他 event（不含自己），[{ value, date_range, title }, ...]
+ * @param {Object} cache       - { eventValue: { A: [...cells], B: [...cells] } }
+ * @returns {{ event: Object, cell: Object|null }[]}
+ */
+export function getMatesForPosition(position, mateEvents, cache) {
+  const column = position.slice(-1); // "A" 或 "B"
+
+  return mateEvents.map((event) => {
+    const columnData = cache[event.value]?.[column] ?? [];
+    const cell = columnData.find((c) => c.position === position) ?? null;
+    return { event, cell };
+  });
+}
+
+/**
  * 把 getOtherEventsForPosition 的結果依貓咪名稱分組，同名的 event 合併在一起。
  *
  * 輸入：[{ event: { date_range, title, ... }, cell: PickCell|null }, ...]

@@ -26,6 +26,11 @@ body {
   padding: 32px 20px 80px;
 }
 
+/* RESULT 畫面（一般檢視 + 特殊檢視並排）需要比其他畫面更寬的空間 */
+.app--result {
+  max-width: min(1600px, 96vw);
+}
+
 h1 {
   font-size: 1.5rem;
   margin-bottom: 4px;
@@ -182,23 +187,40 @@ button.secondary {
   color: var(--color-text-dim);
 }
 
-.special-view-event {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--color-border);
+/* 長期池活動橫向並排；放不下時整個區塊橫向捲動，不換行、不硬塞 */
+.special-view-groups {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  overflow-x: auto;
+  padding-bottom: 12px;
 }
 
-.special-view-event:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+/* 同組（開頭檔期相同）活動之間間距較小，並用右側分隔線跟其他組區隔 */
+.special-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 0 0 auto;
+  padding-right: 28px;
+  border-right: 1px solid var(--color-border);
 }
 
-.special-view-event h3 {
+.special-group:last-child {
+  padding-right: 0;
+  border-right: none;
+}
+
+.special-event-wrap {
+  flex: 0 0 auto;
+}
+
+.special-event-title {
   margin: 0 0 10px;
   font-size: 0.85rem;
   color: var(--color-text-dim);
   font-weight: normal;
+  white-space: nowrap;
 }
 
 /* 螢幕較窄時，左右兩欄改成上下堆疊，避免特殊檢視被擠壓變形 */
@@ -213,6 +235,25 @@ button.secondary {
     padding-top: 24px;
     border-top: 1px solid var(--color-border);
   }
+}
+
+.special-event-grid {
+  display: grid;
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: start;
+}
+
+.special-event-col-label {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  text-align: center;
+}
+
+/* 對齊用的空白格：即使這個活動在此列沒有格子，也要保留跟 pick-card 相同的最小高度，
+   這樣不同活動（各自獨立的 grid）才能維持同一份 row 高度、視覺上對齊 */
+.special-event-cell-empty {
+  min-height: 44px;
 }
 
 .result-columns {
@@ -239,7 +280,9 @@ button.secondary {
 
 .pick-card {
   display: grid;
-  grid-template-columns: 44px 1fr;
+  /* 左欄固定寬度，足夠容納最長的稀有度標籤（例如「超激稀有（限定）」）；
+     右欄寬度由 App.jsx 掃描目前資料算出，透過 --pick-name-width 統一套用到全部 pick-card */
+  grid-template-columns: 108px var(--pick-name-width, 140px);
   gap: 0 10px;
   padding: 7px 10px;
   border-radius: 8px;
@@ -256,10 +299,12 @@ button.secondary {
 .pick-position {
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .pick-rarity {
   font-size: 0.68rem;
+  white-space: nowrap;
 }
 
 .pick-right {
@@ -275,17 +320,19 @@ button.secondary {
 .pick-name {
   font-size: 0.82rem;
   line-height: 1.3;
-  word-break: break-word;
+  white-space: nowrap;
 }
 
 .pick-alt {
   font-size: 0.78rem;
   color: #c8cad0;
+  white-space: nowrap;
 }
 
 .pick-redirect {
   font-size: 0.72rem;
   color: #9499a6;
+  white-space: nowrap;
 }
 
 /* ---- tooltip ---- */

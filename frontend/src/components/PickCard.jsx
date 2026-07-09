@@ -20,23 +20,26 @@ const TOOLTIP_RARITIES = new Set(['legend', 'uber', 'uber_fest']);
 /**
  * @param {{
  *   cell: Object,
- *   getTooltipData?: (position: string) => { event: Object, cell: Object|null }[] | null
+ *   getTooltipData?: (position: string) => { event: Object, cell: Object|null }[] | null,
+ *   alwaysShowTooltip?: boolean,
+ *   style?: Object,
  * }} props
  */
-export default function PickCard({ cell, getTooltipData }) {
+export default function PickCard({ cell, getTooltipData, alwaysShowTooltip = false, style }) {
   const [hovered, setHovered] = useState(false);
 
   const s = RARITY_STYLES[cell.rarity] ?? FALLBACK;
   const label = s.label ?? cell.rarity;
   const hasAlt = !!cell.alt_name;
 
-  const showTooltip = hovered && TOOLTIP_RARITIES.has(cell.rarity) && !!getTooltipData;
+  const showTooltip =
+    hovered && (alwaysShowTooltip || TOOLTIP_RARITIES.has(cell.rarity)) && !!getTooltipData;
   const groups = showTooltip ? groupTooltipByName(getTooltipData(cell.position)) : null;
 
   return (
     <li
       className="pick-card"
-      style={{ background: s.bg, color: s.text }}
+      style={{ background: s.bg, color: s.text, ...style }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

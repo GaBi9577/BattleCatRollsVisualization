@@ -142,6 +142,8 @@ button:disabled {
 .result-event-switcher select {
   font-size: 0.88rem;
 }
+
+.button-row {
   display: flex;
   gap: 8px;
 }
@@ -154,6 +156,63 @@ button.secondary {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text);
+}
+
+.result-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.result-normal {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+.special-view {
+  flex: 1 1 50%;
+  min-width: 0;
+  padding-left: 24px;
+  border-left: 1px solid var(--color-border);
+}
+
+.special-view h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  color: var(--color-text-dim);
+}
+
+.special-view-event {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.special-view-event:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.special-view-event h3 {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  font-weight: normal;
+}
+
+/* 螢幕較窄時，左右兩欄改成上下堆疊，避免特殊檢視被擠壓變形 */
+@media (max-width: 720px) {
+  .result-body {
+    flex-direction: column;
+  }
+
+  .special-view {
+    padding-left: 0;
+    border-left: none;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+  }
 }
 
 .result-columns {
@@ -241,27 +300,31 @@ button.secondary {
   z-index: 100;
   list-style: none;
   padding: 8px 10px;
-  min-width: 240px;
-  max-width: 320px;
+  min-width: 320px;
+  max-width: 480px;
   background: #1a1d24;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  align-items: start;
 }
 
 .tooltip-group {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.tooltip-group + .tooltip-group {
-  border-top: 1px solid var(--color-border);
-  padding-top: 8px;
+.tooltip-group:last-child,
+.tooltip-group:nth-last-child(2):nth-child(odd) {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .tooltip-name {

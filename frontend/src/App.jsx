@@ -3,7 +3,9 @@ import UrlImportForm from './components/UrlImportForm';
 import SeedQueryForm from './components/SeedQueryForm';
 import EventSelect from './components/EventSelect';
 import ResultColumns from './components/ResultColumns';
+import SpecialView from './components/SpecialView';
 import { fetchTracks } from './api/godfatApi';
+import { splitEventsByDuration } from './utils/eventDuration';
 import './styles.css';
 
 const SCREENS = {
@@ -105,6 +107,8 @@ export default function App() {
 
   const currentData = selectedEvent ? cache[selectedEvent] : null;
   const cachedCount = Object.keys(cache).length;
+  const allCached = cachedCount === events.length && events.length > 0;
+  const { longTermEvents } = splitEventsByDuration(events);
 
   return (
     <main className="app">
@@ -133,41 +137,52 @@ export default function App() {
 
       {screen === SCREENS.RESULT && (
         <section className="card result-section">
-          {/* 活動切換選單 */}
-          {events.length > 0 && (
-            <div className="field result-event-switcher">
-              <label htmlFor="result-event">活動</label>
-              <select
-                id="result-event"
-                value={selectedEvent ?? ''}
-                onChange={(e) => handleSwitchEvent(e.target.value)}
-              >
-                {events.map((ev) => (
-                  <option key={ev.value} value={ev.value}>
-                    {cache[ev.value] ? '✓ ' : ''}
-                    {ev.date_range}：{ev.title}
-                  </option>
-                ))}
-              </select>
-              {cachedCount < events.length && (
-                <p className="hint">
-                  背景載入中… {cachedCount} / {events.length}
-                </p>
+          <div className="result-body">
+            <div className="result-normal">
+              {/* 活動切換選單 */}
+              {events.length > 0 && (
+                <div className="field result-event-switcher">
+                  <label htmlFor="result-event">活動</label>
+                  <select
+                    id="result-event"
+                    value={selectedEvent ?? ''}
+                    onChange={(e) => handleSwitchEvent(e.target.value)}
+                  >
+                    {events.map((ev) => (
+                      <option key={ev.value} value={ev.value}>
+                        {cache[ev.value] ? '✓ ' : ''}
+                        {ev.date_range}：{ev.title}
+                      </option>
+                    ))}
+                  </select>
+                  {cachedCount < events.length && (
+                    <p className="hint">
+                      背景載入中… {cachedCount} / {events.length}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {resultLoading && <p className="hint">查詢中…</p>}
+              {resultError && <p className="form-error">{resultError}</p>}
+              {currentData && (
+                <ResultColumns
+                  data={currentData}
+                  cache={cache}
+                  events={events}
+                  currentEvent={selectedEvent}
+                  allCached={allCached}
+                />
               )}
             </div>
-          )}
 
-          {resultLoading && <p className="hint">查詢中…</p>}
-          {resultError && <p className="form-error">{resultError}</p>}
-          {currentData && (
-            <ResultColumns
-              data={currentData}
+            <SpecialView
+              longTermEvents={longTermEvents}
               cache={cache}
               events={events}
-              currentEvent={selectedEvent}
-              allCached={cachedCount === events.length && events.length > 0}
+              allCached={allCached}
             />
-          )}
+          </div>
 
           <button type="button" className="secondary" onClick={() => setScreen(SCREENS.EVENT)}>
             上一頁

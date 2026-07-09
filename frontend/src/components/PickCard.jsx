@@ -4,13 +4,13 @@ import { groupTooltipByName } from '../utils/eventComparison';
 const RARITY_STYLES = {
   normal:     { label: '普通',             bg: 'transparent', text: '#9499a6' },
   rare:       { label: '稀有',             bg: 'transparent', text: '#9499a6' },
-  supa:       { label: '超稀有',           bg: '#2e2b00',     text: '#FFD700' },
-  supa_fest:  { label: '超稀有（限定）',   bg: '#2e1c00',     text: '#FFA500' },
-  uber:       { label: '超激稀有',         bg: '#2e0808',     text: '#FF3333' },
-  uber_fest:  { label: '超激稀有（限定）', bg: '#2e1200',     text: '#FF6B35' },
-  exclusive:  { label: '限定',             bg: '#002a2e',     text: '#00FFFF' },
+  supa:       { label: '超稀有',           bg: '#FFD700',     text: '#1a1a1a' },
+  supa_fest:  { label: '超稀有（限定）',   bg: '#FFFF00',     text: '#1a1a1a' },
+  uber:       { label: '超激稀有',         bg: '#FF0000',     text: '#1a1a1a' },
+  uber_fest:  { label: '超激稀有（限定）', bg: '#FA8072',     text: '#1a1a1a' },
+  exclusive:  { label: '限定',             bg: '#00FFFF',     text: '#1a1a1a' },
   found:      { label: '尋獲',             bg: '#002e10',     text: '#00FF7F' },
-  legend:     { label: '傳說稀有',         bg: '#2a0030',     text: '#FF00FF' },
+  legend:     { label: '傳說稀有',         bg: '#9400D3',     text: '#1a1a1a' },
 };
 
 const FALLBACK = { label: null, bg: 'transparent', text: '#9499a6' };
@@ -36,21 +36,21 @@ export default function PickCard({ cell, getTooltipData }) {
   return (
     <li
       className="pick-card"
-      style={{ background: s.bg }}
+      style={{ background: s.bg, color: s.text }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <div className="pick-left">
-        <span className="pick-position" style={{ color: s.text }}>{cell.position}</span>
-        <span className="pick-rarity"   style={{ color: s.text }}>{label}</span>
+        <span className="pick-position">{cell.position}</span>
+        <span className="pick-rarity">{label}</span>
       </div>
 
       <div className={`pick-right${hasAlt ? '' : ' pick-right--centered'}`}>
         <span className="pick-name">{cell.name}</span>
         {hasAlt && (
-          <span className="pick-alt">
+          <span className="pick-alt" style={{ color: s.text }}>
             {cell.alt_name}
-            <span className="pick-redirect"> ({cell.redirect})</span>
+            <span className="pick-redirect" style={{ color: s.text, opacity: 0.7 }}> ({cell.redirect})</span>
           </span>
         )}
       </div>

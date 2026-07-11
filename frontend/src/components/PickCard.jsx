@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { groupTooltipByName } from '../utils/eventComparison';
+import { truncateName } from '../utils/textTruncate';
 
 const RARITY_STYLES = {
   normal:     { label: '普通',             bg: 'transparent', text: '#9499a6' },
@@ -49,10 +50,10 @@ export default function PickCard({ cell, getTooltipData, alwaysShowTooltip = fal
       </div>
 
       <div className={`pick-right${hasAlt ? '' : ' pick-right--centered'}`}>
-        <span className="pick-name">{cell.name}</span>
+        <span className="pick-name" title={cell.name}>{truncateName(cell.name)}</span>
         {hasAlt && (
-          <span className="pick-alt" style={{ color: s.text }}>
-            {cell.alt_name}
+          <span className="pick-alt" style={{ color: s.text }} title={cell.alt_name}>
+            {truncateName(cell.alt_name)}
             <span className="pick-redirect" style={{ color: s.text, opacity: 0.7 }}> ({cell.redirect})</span>
           </span>
         )}

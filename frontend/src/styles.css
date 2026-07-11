@@ -170,12 +170,12 @@ button.secondary {
 }
 
 .result-normal {
-  flex: 1 1 50%;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
 .special-view {
-  flex: 1 1 50%;
+  flex: 0 1 auto;
   min-width: 0;
   padding-left: 24px;
   border-left: 1px solid var(--color-border);
@@ -187,12 +187,17 @@ button.secondary {
   color: var(--color-text-dim);
 }
 
-/* 長期池活動橫向並排；放不下時整個區塊橫向捲動，不換行、不硬塞 */
+/* 長期池活動橫向並排；放不下時整個區塊橫向捲動，不換行、不硬塞。
+   padding-top 是為了讓長期池的「1A」格子跟左側一般池的「1A」格子高度對齊
+   （一般池上方多一層「活動」下拉選單，長期池要往下推補這段差距）。
+   以「背景快取完成後」（一般池沒有 hint 提示文字）的高度為準估算，是估算值，
+   待實機跑起來看效果再微調。 */
 .special-view-groups {
   display: flex;
   align-items: flex-start;
   gap: 28px;
   overflow-x: auto;
+  padding-top: 26px;
   padding-bottom: 12px;
 }
 
@@ -281,8 +286,8 @@ button.secondary {
 .pick-card {
   display: grid;
   /* 左欄固定寬度，足夠容納最長的稀有度標籤（例如「超激稀有（限定）」）；
-     右欄寬度由 App.jsx 掃描目前資料算出，透過 --pick-name-width 統一套用到全部 pick-card */
-  grid-template-columns: 108px var(--pick-name-width, 140px);
+     右欄固定寬度，對應貓咪名稱最多顯示10字（粗體 ×1.5 字級）不換行 */
+  grid-template-columns: 108px 190px;
   gap: 0 10px;
   padding: 7px 10px;
   border-radius: 8px;
@@ -318,15 +323,21 @@ button.secondary {
 }
 
 .pick-name {
-  font-size: 0.82rem;
+  font-size: 1.23rem;
+  font-weight: 700;
   line-height: 1.3;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pick-alt {
-  font-size: 0.78rem;
+  font-size: 1.17rem;
+  font-weight: 700;
   color: #c8cad0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pick-redirect {

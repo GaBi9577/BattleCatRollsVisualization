@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import UrlImportForm from './components/UrlImportForm';
 import SeedQueryForm from './components/SeedQueryForm';
 import EventSelect from './components/EventSelect';
@@ -6,7 +6,6 @@ import ResultColumns from './components/ResultColumns';
 import SpecialView from './components/SpecialView';
 import { fetchTracks } from './api/godfatApi';
 import { splitEventsByDuration } from './utils/eventDuration';
-import { computeNameColumnWidth } from './utils/textMeasure';
 import './styles.css';
 
 const SCREENS = {
@@ -111,15 +110,8 @@ export default function App() {
   const allCached = cachedCount === events.length && events.length > 0;
   const { longTermEvents } = splitEventsByDuration(events);
 
-  // 掃描目前已快取的所有格子，算出統一的名稱欄位寬度，讓每個 pick-card 寬度一致、不換行
-  const nameColumnWidth = useMemo(() => computeNameColumnWidth(cache), [cache]);
-  const appStyle = { '--pick-name-width': `${nameColumnWidth}px` };
-
   return (
-    <main
-      className={`app${screen === SCREENS.RESULT ? ' app--result' : ''}`}
-      style={appStyle}
-    >
+    <main className={`app${screen === SCREENS.RESULT ? ' app--result' : ''}`}>
       <h1>Battle Cats 轉蛋查詢</h1>
 
       {screen === SCREENS.QUERY && (

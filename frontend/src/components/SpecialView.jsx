@@ -21,6 +21,10 @@ import { computeMaxPositionIndex } from '../utils/positionGrid';
  *   cache: Object,
  * }} props
  */
+// 長期池同檔期會有「傳說」「白金」等多個活動配對，比較邏輯仍要用整組資料，
+// 但畫面上只需要顯示白金池，避免同檔期的池子重複塞滿版面。
+const DISPLAY_TITLE_KEYWORD = '白金';
+
 export default function SpecialView({ longTermEvents, cache }) {
   const groups = useMemo(
     () => groupEventsByStartDate(longTermEvents),
@@ -40,34 +44,41 @@ export default function SpecialView({ longTermEvents, cache }) {
     <aside className="special-view">
       <h2>特殊檢視（長期池）</h2>
       <div className="special-view-groups">
-        {groups.map((group) => (
-          <div key={group.map((ev) => ev.value).join('|')} className="special-group">
-            {group.map((event) => {
-              const data = cache[event.value];
-              const mates = group.filter((ev) => ev.value !== event.value);
-              const matesCached = mates.every((ev) => cache[ev.value]);
-              const getTooltipData =
-                mates.length > 0 && matesCached
-                  ? (position) => getMatesForPosition(position, mates, cache)
-                  : null;
+        {groups.map((group) => {
+          const displayEvents = group.filter((ev) => ev.title.includes(DISPLAY_TITLE_KEYWORD));
+          if (displayEvents.length === 0) {
+            return null;
+          }
 
-              return (
-                <div key={event.value} className="special-event-wrap">
-                  {data ? (
-                    <SpecialEventColumns
-                      event={event}
-                      data={data}
-                      maxRows={maxRows}
-                      getTooltipData={getTooltipData}
-                    />
-                  ) : (
-                    <p className="hint">背景載入中…</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+          return (
+            <div key={group.map((ev) => ev.value).join('|')} className="special-group">
+              {displayEvents.map((event) => {
+                const data = cache[event.value];
+                const mates = group.filter((ev) => ev.value !== event.value);
+                const matesCached = mates.every((ev) => cache[ev.value]);
+                const getTooltipData =
+                  mates.length > 0 && matesCached
+                    ? (position) => getMatesForPosition(position, mates, cache)
+                    : null;
+
+                return (
+                  <div key={event.value} className="special-event-wrap">
+                    {data ? (
+                      <SpecialEventColumns
+                        event={event}
+                        data={data}
+                        maxRows={maxRows}
+                        getTooltipData={getTooltipData}
+                      />
+                    ) : (
+                      <p className="hint">背景載入中…</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </aside>
   );

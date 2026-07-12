@@ -6,3 +6,4 @@ backend.log
 .env.local
 dist/
 doc/
+project_summary.md

@@ -107,8 +107,7 @@ export default function App() {
 
   const currentData = selectedEvent ? cache[selectedEvent] : null;
   const cachedCount = Object.keys(cache).length;
-  const allCached = cachedCount === events.length && events.length > 0;
-  const { longTermEvents } = splitEventsByDuration(events);
+  const { normalEvents, longTermEvents } = splitEventsByDuration(events);
 
   return (
     <main className={`app${screen === SCREENS.RESULT ? ' app--result' : ''}`}>
@@ -169,9 +168,8 @@ export default function App() {
                 <ResultColumns
                   data={currentData}
                   cache={cache}
-                  events={events}
+                  events={normalEvents}
                   currentEvent={selectedEvent}
-                  allCached={allCached}
                 />
               )}
             </div>

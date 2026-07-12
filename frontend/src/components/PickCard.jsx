@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { groupTooltipByName } from '../utils/eventComparison';
 import { truncateName } from '../utils/textTruncate';
+import { darken } from '../utils/color';
 
 const RARITY_STYLES = {
   normal:     { label: '普通',             bg: 'transparent', text: '#9499a6' },
@@ -16,31 +17,40 @@ const RARITY_STYLES = {
 
 const FALLBACK = { label: null, bg: 'transparent', text: '#9499a6' };
 
-const TOOLTIP_RARITIES = new Set(['legend', 'uber', 'uber_fest']);
+// 有 tooltip 內容時，格子背景加深的比例（比照稀有度原色加深，不換色）
+const HIGHLIGHT_DARKEN_AMOUNT = 0.1;
 
 /**
  * @param {{
  *   cell: Object,
  *   getTooltipData?: (position: string) => { event: Object, cell: Object|null }[] | null,
- *   alwaysShowTooltip?: boolean,
  *   style?: Object,
  * }} props
  */
-export default function PickCard({ cell, getTooltipData, alwaysShowTooltip = false, style }) {
+export default function PickCard({ cell, getTooltipData, style }) {
   const [hovered, setHovered] = useState(false);
+  const [pinned, setPinned] = useState(false); // 點擊 + 符號釘住 tooltip（手機無 hover 時使用）
 
   const s = RARITY_STYLES[cell.rarity] ?? FALLBACK;
   const label = s.label ?? cell.rarity;
   const hasAlt = !!cell.alt_name;
 
-  const showTooltip =
-    hovered && (alwaysShowTooltip || TOOLTIP_RARITIES.has(cell.rarity)) && !!getTooltipData;
-  const groups = showTooltip ? groupTooltipByName(getTooltipData(cell.position)) : null;
+  // 同組內只要有其他 event 在這個位置的貓咪名稱不同，就代表「這格有得比較」；
+  // 不限稀有度，一般池／長期池共用同一套規則。這個判斷要隨時算好（不只 hover 時），
+  // 因為常駐高亮外框不需要 hover 就要顯示。
+  const groups = useMemo(() => {
+    if (!getTooltipData) return [];
+    return groupTooltipByName(getTooltipData(cell.position), cell.name);
+  }, [getTooltipData, cell.position, cell.name]);
+
+  const hasContent = groups.length > 0;
+  const showTooltip = hasContent && (hovered || pinned);
+  const background = hasContent ? darken(s.bg, HIGHLIGHT_DARKEN_AMOUNT) : s.bg;
 
   return (
     <li
       className="pick-card"
-      style={{ background: s.bg, color: s.text, ...style }}
+      style={{ background, color: s.text, ...style }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -59,8 +69,24 @@ export default function PickCard({ cell, getTooltipData, alwaysShowTooltip = fal
         )}
       </div>
 
-      {/* Tooltip：貓咪名稱在上，event 在下，同名合併 */}
-      {showTooltip && groups && groups.length > 0 && (
+      {/* 有得比較的格子才顯示：右緣 + 符號，點擊可釘住 tooltip（給沒有 hover 的手機用） */}
+      {hasContent && (
+        <button
+          type="button"
+          className="pick-flag"
+          style={{ color: s.text }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setPinned((prev) => !prev);
+          }}
+          aria-label="顯示其他活動的比較結果"
+        >
+          +
+        </button>
+      )}
+
+      {/* Tooltip：貓咪名稱在上，event 在下，同名合併；飄在格子正下方，直接覆蓋不避讓 */}
+      {showTooltip && (
         <ul className="pick-tooltip">
           {groups.map(({ name, labels }) => (
             <li key={name} className="tooltip-group">

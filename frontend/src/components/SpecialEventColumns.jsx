@@ -66,7 +66,6 @@ export default function SpecialEventColumns({ event, data, maxRows, getTooltipDa
                 key={cell.position}
                 cell={cell}
                 getTooltipData={getTooltipData}
-                alwaysShowTooltip
                 style={gridStyle}
               />
             );

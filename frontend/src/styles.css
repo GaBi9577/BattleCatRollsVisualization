@@ -7,6 +7,9 @@
   --color-accent: #ff8a3d;
   --color-error: #ff5d5d;
   --radius: 12px;
+  /* 一個「set」（一般池整體，或長期池單一活動）左右各自的固定間距；
+     兩個 set 相鄰時，視覺間距 = 2 個 --set-margin。估算值，待實機微調。 */
+  --set-margin: 24px;
 }
 
 * {
@@ -166,18 +169,26 @@ button.secondary {
 .result-body {
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  gap: 0;
+}
+
+/* 「set」＝一個左右都有固定 margin 的版面單位：一般池整體是一個 set，
+   長期池每個活動（.special-event-wrap）也各自是一個 set。
+   兩個 set 相鄰時中間就會自然變成 2 個 --set-margin，不用額外設 gap。 */
+.result-normal,
+.special-event-wrap {
+  padding: 0 var(--set-margin);
+  box-sizing: border-box;
 }
 
 .result-normal {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
 .special-view {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
-  padding-left: 24px;
   border-left: 1px solid var(--color-border);
 }
 
@@ -187,32 +198,26 @@ button.secondary {
   color: var(--color-text-dim);
 }
 
-/* 長期池活動橫向並排；放不下時整個區塊橫向捲動，不換行、不硬塞。
-   padding-top 是為了讓長期池的「1A」格子跟左側一般池的「1A」格子高度對齊
-   （一般池上方多一層「活動」下拉選單，長期池要往下推補這段差距）。
-   以「背景快取完成後」（一般池沒有 hint 提示文字）的高度為準估算，是估算值，
-   待實機跑起來看效果再微調。 */
 .special-view-groups {
   display: flex;
   align-items: flex-start;
-  gap: 28px;
+  gap: 0;
   overflow-x: auto;
   padding-top: 26px;
   padding-bottom: 12px;
 }
 
-/* 同組（開頭檔期相同）活動之間間距較小，並用右側分隔線跟其他組區隔 */
+/* 同組（開頭檔期相同）活動之間跟其他組間距現在是同一個數值（都靠 set 自身
+   padding 撐出），只用右側細線標示「這是同一組活動」，不再額外加間距 */
 .special-group {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 0;
   flex: 0 0 auto;
-  padding-right: 28px;
   border-right: 1px solid var(--color-border);
 }
 
 .special-group:last-child {
-  padding-right: 0;
   border-right: none;
 }
 
@@ -235,7 +240,6 @@ button.secondary {
   }
 
   .special-view {
-    padding-left: 0;
     border-left: none;
     padding-top: 24px;
     border-top: 1px solid var(--color-border);
@@ -351,10 +355,33 @@ button.secondary {
   position: relative;
 }
 
+/* 有 tooltip 內容的格子才會出現：右緣垂直置中的 + 符號，
+   點擊可釘住 tooltip（給沒有 hover 的手機使用，桌面版滑鼠 hover 原有行為不變） */
+.pick-flag {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.pick-flag:hover {
+  opacity: 1;
+}
+
 .pick-tooltip {
   position: absolute;
-  left: calc(100% + 8px);
-  top: 0;
+  left: 0;
+  top: calc(100% + 6px);
   z-index: 100;
   list-style: none;
   padding: 8px 10px;

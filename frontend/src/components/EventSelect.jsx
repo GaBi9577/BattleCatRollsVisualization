@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fetchUpcomingEvents } from '../api/godfatApi';
+import { splitEventsByDuration } from '../utils/eventDuration';
 
 /**
  * 第 2 畫面：選擇要模擬的活動（event）。
@@ -16,6 +17,10 @@ export default function EventSelect({ lang, onSelect, onBack, onEventsLoaded }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // 只列一般池：長期池（白金/傳說轉蛋）不能在這裡被選成「目前活動」，
+  // 它會在 RESULT 畫面自動整包顯示在右側特殊檢視。
+  const normalEvents = useMemo(() => splitEventsByDuration(events).normalEvents, [events]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -26,7 +31,7 @@ export default function EventSelect({ lang, onSelect, onBack, onEventsLoaded }) 
         const data = await fetchUpcomingEvents({ lang });
         if (cancelled) return;
         setEvents(data);
-        setSelectedValue(data[0]?.value ?? '');
+        setSelectedValue(splitEventsByDuration(data).normalEvents[0]?.value ?? '');
         onEventsLoaded?.(data);
       } catch (err) {
         if (!cancelled) setError(err.message ?? '活動清單載入失敗。');
@@ -60,7 +65,7 @@ export default function EventSelect({ lang, onSelect, onBack, onEventsLoaded }) 
             value={selectedValue}
             onChange={(e) => setSelectedValue(e.target.value)}
           >
-            {events.map((ev) => (
+            {normalEvents.map((ev) => (
               <option key={ev.value} value={ev.value}>
                 {ev.date_range}：{ev.title}
               </option>

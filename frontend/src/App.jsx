@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import UrlImportForm from './components/UrlImportForm';
 import SeedQueryForm from './components/SeedQueryForm';
 import EventSelect from './components/EventSelect';
@@ -107,7 +107,10 @@ export default function App() {
 
   const currentData = selectedEvent ? cache[selectedEvent] : null;
   const cachedCount = Object.keys(cache).length;
-  const { normalEvents, longTermEvents } = splitEventsByDuration(events);
+  const { normalEvents, longTermEvents } = useMemo(
+    () => splitEventsByDuration(events),
+    [events]
+  );
 
   return (
     <main className={`app${screen === SCREENS.RESULT ? ' app--result' : ''}`}>
@@ -138,8 +141,8 @@ export default function App() {
         <section className="card result-section">
           <div className="result-body">
             <div className="result-normal">
-              {/* 活動切換選單 */}
-              {events.length > 0 && (
+              {/* 活動切換選單：只列一般池，長期池自動顯示在右側，不能從這裡選 */}
+              {normalEvents.length > 0 && (
                 <div className="field result-event-switcher">
                   <label htmlFor="result-event">活動</label>
                   <select
@@ -147,7 +150,7 @@ export default function App() {
                     value={selectedEvent ?? ''}
                     onChange={(e) => handleSwitchEvent(e.target.value)}
                   >
-                    {events.map((ev) => (
+                    {normalEvents.map((ev) => (
                       <option key={ev.value} value={ev.value}>
                         {cache[ev.value] ? '✓ ' : ''}
                         {ev.date_range}：{ev.title}

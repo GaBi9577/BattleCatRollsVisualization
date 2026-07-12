@@ -413,9 +413,10 @@ button.secondary {
 }
 
 .tooltip-name {
-  font-size: 0.82rem;
+  font-size: 1.23rem;
   color: var(--color-text);
-  font-weight: 500;
+  font-weight: 700;
+  text-align: center;
 }
 
 .tooltip-event {

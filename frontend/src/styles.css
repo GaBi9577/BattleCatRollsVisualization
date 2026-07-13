@@ -1,15 +1,33 @@
+/* 網站原本的設計就是深色主題，所以 :root 維持這組深色值當預設（沒切換過主題的使用者畫面不變）。
+   稀有度色碼（PickCard.jsx 的 RARITY_STYLES）是原站真實色碼，不受主題影響，固定不變。 */
 :root {
   --color-bg: #0f1115;
   --color-surface: #1a1d24;
+  --color-input-bg: #11141a;
   --color-border: #2b2f3a;
+  --color-card-border: rgba(255, 255, 255, 0.06);
   --color-text: #e8e9ed;
   --color-text-dim: #9499a6;
   --color-accent: #ff8a3d;
   --color-error: #ff5d5d;
+  --color-shadow: rgba(0, 0, 0, 0.5);
   --radius: 12px;
   /* 一個「set」（一般池整體，或長期池單一活動）左右各自的固定間距；
      兩個 set 相鄰時，視覺間距 = 2 個 --set-margin。估算值，待實機微調。 */
   --set-margin: 24px;
+}
+
+[data-theme='light'] {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-input-bg: #ffffff;
+  --color-border: #dcdfe4;
+  --color-card-border: rgba(0, 0, 0, 0.08);
+  --color-text: #1a1d24;
+  --color-text-dim: #6b7280;
+  --color-accent: #ff8a3d;
+  --color-error: #d92d2d;
+  --color-shadow: rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -21,12 +39,34 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .app {
   max-width: 560px;
   margin: 0 auto;
   padding: 32px 20px 80px;
+}
+
+/* 頂部工具列：固定在畫面右上角，黑暗模式開關一直顯示，規劃模式相關按鈕只在 RESULT 畫面出現 */
+.top-toolbar {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-toolbar button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.planning-count {
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
 }
 
 /* RESULT 畫面（一般檢視 + 特殊檢視並排）需要比其他畫面更寬的空間 */
@@ -67,7 +107,7 @@ select {
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  background: #11141a;
+  background: var(--color-input-bg);
   color: var(--color-text);
   font-size: 1rem;
 }
@@ -295,7 +335,7 @@ button.secondary {
   gap: 0 10px;
   padding: 7px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--color-card-border);
   min-height: 44px;
 }
 
@@ -387,10 +427,10 @@ button.secondary {
   padding: 8px 10px;
   min-width: 320px;
   max-width: 480px;
-  background: #1a1d24;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 16px var(--color-shadow);
   pointer-events: none;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -423,4 +463,31 @@ button.secondary {
   font-size: 0.7rem;
   color: var(--color-text-dim);
   line-height: 1.4;
+}
+
+/* ---- 規劃模式 ---- */
+
+/* 描圖紙：規劃模式開啟時蓋在每格上方，10% 白色半透明；點擊挖開（opacity 0）
+   露出下面的格子本身，同時搭配 .pick-card--selected 的外框作為顯眼提示。
+   z-index 蓋過 + 符號，規劃模式下點擊整格都是在標記，不會誤觸 + 符號。 */
+.planning-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  transition: opacity 0.15s ease;
+}
+
+.planning-overlay.is-selected {
+  opacity: 0;
+}
+
+.pick-card--selected {
+  outline: 5px solid var(--color-accent);
+  outline-offset: -5px;
 }

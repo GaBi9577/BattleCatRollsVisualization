@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { groupTooltipByName } from '../utils/eventComparison';
 import { truncateName } from '../utils/textTruncate';
-import { darken } from '../utils/color';
 
 const RARITY_STYLES = {
   normal:     { label: '普通',             bg: 'transparent', text: '#9499a6' },
@@ -17,17 +16,17 @@ const RARITY_STYLES = {
 
 const FALLBACK = { label: null, bg: 'transparent', text: '#9499a6' };
 
-// 有 tooltip 內容時，格子背景加深的比例（比照稀有度原色加深，不換色）
-const HIGHLIGHT_DARKEN_AMOUNT = 0.1;
-
 /**
  * @param {{
  *   cell: Object,
  *   getTooltipData?: (position: string) => { event: Object, cell: Object|null }[] | null,
  *   style?: Object,
+ *   planning?: boolean,           // 規劃模式是否開啟
+ *   selected?: boolean,           // 這格目前是否被標記
+ *   onToggleSelect?: () => void,  // 點擊時切換這格的標記狀態
  * }} props
  */
-export default function PickCard({ cell, getTooltipData, style }) {
+export default function PickCard({ cell, getTooltipData, style, planning = false, selected = false, onToggleSelect }) {
   const [hovered, setHovered] = useState(false);
   const [pinned, setPinned] = useState(false); // 點擊 + 符號釘住 tooltip（手機無 hover 時使用）
 
@@ -45,12 +44,11 @@ export default function PickCard({ cell, getTooltipData, style }) {
 
   const hasContent = groups.length > 0;
   const showTooltip = hasContent && (hovered || pinned);
-  const background = hasContent ? darken(s.bg, HIGHLIGHT_DARKEN_AMOUNT) : s.bg;
 
   return (
     <li
-      className="pick-card"
-      style={{ background, color: s.text, ...style }}
+      className={`pick-card${planning && selected ? ' pick-card--selected' : ''}`}
+      style={{ background: s.bg, color: s.text, ...style }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -83,6 +81,21 @@ export default function PickCard({ cell, getTooltipData, style }) {
         >
           +
         </button>
+      )}
+
+      {/* 規劃模式：整格蓋一層描圖紙，點擊挖開（隱藏 overlay）露出格子本身作為標記提示。
+          蓋在 + 符號跟 hover tooltip 之上，規劃模式下優先讓使用者標記格子，不用擔心誤觸 + 符號。 */}
+      {planning && (
+        <button
+          type="button"
+          className={`planning-overlay${selected ? ' is-selected' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect?.();
+          }}
+          aria-pressed={selected}
+          aria-label={selected ? '取消標記這格' : '標記這格'}
+        />
       )}
 
       {/* Tooltip：貓咪名稱在上，event 在下，同名合併；飄在格子正下方，直接覆蓋不避讓 */}

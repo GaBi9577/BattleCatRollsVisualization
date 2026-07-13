@@ -8,9 +8,20 @@ import { getMatesForPosition } from '../utils/eventComparison';
  *   cache: Object,
  *   events: Array,        // 一般池 events（不含長期池，由 App.jsx 先分好）
  *   currentEvent: string,
+ *   planningMode?: boolean,
+ *   selectedCells?: Set<string>,
+ *   onToggleCell?: (key: string) => void,
  * }} props
  */
-export default function ResultColumns({ data, cache, events, currentEvent }) {
+export default function ResultColumns({
+  data,
+  cache,
+  events,
+  currentEvent,
+  planningMode = false,
+  selectedCells,
+  onToggleCell,
+}) {
   const columns = Object.keys(data).sort();
 
   // 一般池規則：同組（normalEvents）裡所有活動皆為比較對象，不再依開頭檔期分組
@@ -39,13 +50,19 @@ export default function ResultColumns({ data, cache, events, currentEvent }) {
         <section key={column} className="result-column">
           <h3>欄位 {column}</h3>
           <ul>
-            {data[column].map((cell) => (
-              <PickCard
-                key={cell.position}
-                cell={cell}
-                getTooltipData={getTooltipData}
-              />
-            ))}
+            {data[column].map((cell) => {
+              const cellKey = `${currentEvent}-${column}-${cell.position}`;
+              return (
+                <PickCard
+                  key={cell.position}
+                  cell={cell}
+                  getTooltipData={getTooltipData}
+                  planning={planningMode}
+                  selected={selectedCells?.has(cellKey) ?? false}
+                  onToggleSelect={() => onToggleCell?.(cellKey)}
+                />
+              );
+            })}
           </ul>
         </section>
       ))}

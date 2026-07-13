@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import UrlImportForm from './components/UrlImportForm';
 import SeedQueryForm from './components/SeedQueryForm';
 import EventSelect from './components/EventSelect';
@@ -6,6 +6,7 @@ import ResultColumns from './components/ResultColumns';
 import SpecialView from './components/SpecialView';
 import { fetchTracks } from './api/godfatApi';
 import { splitEventsByDuration } from './utils/eventDuration';
+import { readTheme, writeTheme } from './utils/theme';
 import './styles.css';
 
 const SCREENS = {
@@ -16,6 +17,42 @@ const SCREENS = {
 
 export default function App() {
   const [screen, setScreen] = useState(SCREENS.QUERY);
+
+  // 黑暗模式：初始值讀 localStorage 記住的上次選擇，切換時同步寫回。
+  const [theme, setTheme] = useState(readTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      writeTheme(next);
+      return next;
+    });
+  }
+
+  // 規劃模式：只在本次瀏覽有效，重新整理就清空，不寫 localStorage。
+  // 標記單位是單一格子，key 用 `${eventValue}-${column}-${position}` 識別。
+  const [planningMode, setPlanningMode] = useState(false);
+  const [selectedCells, setSelectedCells] = useState(() => new Set());
+
+  const toggleCell = useCallback((key) => {
+    setSelectedCells((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  function clearAllSelections() {
+    setSelectedCells(new Set());
+  }
 
   // 頁面一
   const [imported, setImported] = useState(null);
@@ -114,6 +151,32 @@ export default function App() {
 
   return (
     <main className={`app${screen === SCREENS.RESULT ? ' app--result' : ''}`}>
+      <div className="top-toolbar">
+        <button type="button" className="secondary" onClick={toggleTheme}>
+          {theme === 'dark' ? '☀️ 亮色' : '🌙 深色'}
+        </button>
+
+        {screen === SCREENS.RESULT && (
+          <>
+            <button
+              type="button"
+              className={planningMode ? '' : 'secondary'}
+              onClick={() => setPlanningMode((prev) => !prev)}
+            >
+              {planningMode ? '結束規劃' : '規劃模式'}
+            </button>
+            {planningMode && (
+              <>
+                <span className="planning-count">已選 {selectedCells.size} 格</span>
+                <button type="button" className="secondary" onClick={clearAllSelections}>
+                  清除全部
+                </button>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
       <h1>Battle Cats 轉蛋查詢</h1>
 
       {screen === SCREENS.QUERY && (
@@ -173,6 +236,9 @@ export default function App() {
                   cache={cache}
                   events={normalEvents}
                   currentEvent={selectedEvent}
+                  planningMode={planningMode}
+                  selectedCells={selectedCells}
+                  onToggleCell={toggleCell}
                 />
               )}
             </div>
@@ -180,6 +246,9 @@ export default function App() {
             <SpecialView
               longTermEvents={longTermEvents}
               cache={cache}
+              planningMode={planningMode}
+              selectedCells={selectedCells}
+              onToggleCell={toggleCell}
             />
           </div>
 

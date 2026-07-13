@@ -13,9 +13,20 @@ import { parsePositionIndex } from '../utils/positionGrid';
  *   data: Object,                                    // { A: [...cells], B: [...cells] }
  *   maxRows: number,
  *   getTooltipData: ((position: string) => Array) | null,
+ *   planningMode?: boolean,
+ *   selectedCells?: Set<string>,
+ *   onToggleCell?: (key: string) => void,
  * }} props
  */
-export default function SpecialEventColumns({ event, data, maxRows, getTooltipData }) {
+export default function SpecialEventColumns({
+  event,
+  data,
+  maxRows,
+  getTooltipData,
+  planningMode = false,
+  selectedCells,
+  onToggleCell,
+}) {
   const columns = Object.keys(data).sort();
   const rows = maxRows > 0 ? maxRows : 1;
   const rowIndexes = Array.from({ length: rows }, (_, i) => i + 1);
@@ -61,12 +72,16 @@ export default function SpecialEventColumns({ event, data, maxRows, getTooltipDa
               );
             }
 
+            const cellKey = `${event.value}-${column}-${cell.position}`;
             return (
               <PickCard
                 key={cell.position}
                 cell={cell}
                 getTooltipData={getTooltipData}
                 style={gridStyle}
+                planning={planningMode}
+                selected={selectedCells?.has(cellKey) ?? false}
+                onToggleSelect={() => onToggleCell?.(cellKey)}
               />
             );
           })

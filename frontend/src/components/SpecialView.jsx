@@ -19,13 +19,22 @@ import { computeMaxPositionIndex } from '../utils/positionGrid';
  * @param {{
  *   longTermEvents: Array<{ value: string, date_range: string, title: string }>,
  *   cache: Object,
+ *   planningMode?: boolean,
+ *   selectedCells?: Set<string>,
+ *   onToggleCell?: (key: string) => void,
  * }} props
  */
 // 長期池同檔期會有「傳說」「白金」等多個活動配對，比較邏輯仍要用整組資料，
 // 但畫面上只需要顯示白金池，避免同檔期的池子重複塞滿版面。
 const DISPLAY_TITLE_KEYWORD = '白金';
 
-export default function SpecialView({ longTermEvents, cache }) {
+export default function SpecialView({
+  longTermEvents,
+  cache,
+  planningMode = false,
+  selectedCells,
+  onToggleCell,
+}) {
   const groups = useMemo(
     () => groupEventsByStartDate(longTermEvents),
     [longTermEvents]
@@ -69,6 +78,9 @@ export default function SpecialView({ longTermEvents, cache }) {
                         data={data}
                         maxRows={maxRows}
                         getTooltipData={getTooltipData}
+                        planningMode={planningMode}
+                        selectedCells={selectedCells}
+                        onToggleCell={onToggleCell}
                       />
                     ) : (
                       <p className="hint">背景載入中…</p>

@@ -8,7 +8,8 @@ export async function fetchUpcomingEvents({ lang }) {
   const response = await fetch(`${API_BASE}/api/events?${params.toString()}`);
 
   if (!response.ok) {
-    throw new Error(`活動清單查詢失敗（${response.status}）`);
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.detail ?? `活動清單查詢失敗（${response.status}）`);
   }
 
   return response.json();

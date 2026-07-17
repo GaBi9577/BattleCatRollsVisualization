@@ -1,6 +1,8 @@
 """負責跟 bc.godfat.org 要頁面。"""
 from __future__ import annotations
 
+import time
+
 import requests
 
 _BASE_URL = "https://bc.godfat.org/"
@@ -25,10 +27,12 @@ class GodfatClient:
     - 換資料來源（例如改成讀本地存好的 HTML 檔）時，只要換掉這個 class
     """
 
-    def __init__(self, timeout: float = 30.0):
+    def __init__(self, timeout: float = 30.0, retries: int = 2, retry_delay: float = 1.0):
         self._session = requests.Session()
         self._session.headers.update(_HEADERS)
         self._timeout = timeout
+        self._retries = retries
+        self._retry_delay = retry_delay
 
     def fetch_track_page(
         self,
@@ -47,13 +51,25 @@ class GodfatClient:
         if last is not None:
             params["last"] = last
 
-        response = self._session.get(_BASE_URL, params=params, timeout=self._timeout)
-        response.raise_for_status()
-        return response.text
+        return self._get(params)
 
     def fetch_event_list_page(self, lang: str = "tw") -> str:
         """抓「活動清單」頁面（只需要 lang），用來解析可選的 event 清單。"""
-        params = {"lang": lang}
-        response = self._session.get(_BASE_URL, params=params, timeout=self._timeout)
-        response.raise_for_status()
-        return response.text
+        return self._get({"lang": lang})
+
+    def _get(self, params: dict) -> str:
+        """發送 GET 請求，失敗時間隔重試（已知 bc.godfat.org 的 timeout 多半是
+        站方/路由的暫時性問題，重試可以省下不少「純網路波動」造成的失敗）。
+        全部嘗試都失敗才把最後一次的例外往上拋。
+        """
+        last_exc: requests.RequestException | None = None
+        for attempt in range(self._retries + 1):
+            try:
+                response = self._session.get(_BASE_URL, params=params, timeout=self._timeout)
+                response.raise_for_status()
+                return response.text
+            except requests.RequestException as exc:
+                last_exc = exc
+                if attempt < self._retries:
+                    time.sleep(self._retry_delay)
+        raise last_exc

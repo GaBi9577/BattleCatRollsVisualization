@@ -12,16 +12,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
 
 from .event_parser import EventListParser
 from .exporter import events_to_serializable, save_json
 from .fetcher import GodfatClient
 from .grouper import group_by_column
+from .merger import merge_r_cells
 from .parser import PickCellParser
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     args = _parse_args()
     if args.command == "tracks":
         _run_tracks(args)
@@ -34,6 +37,7 @@ def _run_tracks(args: argparse.Namespace) -> None:
         seed=args.seed, event=args.event, lang=args.lang, last=args.last
     )
     cells = PickCellParser().parse(html)
+    cells = merge_r_cells(cells)
     grouped = group_by_column(cells)
 
     save_json(grouped, args.output)

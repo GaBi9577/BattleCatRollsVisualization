@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+from functools import lru_cache
+
 import requests
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,12 +54,19 @@ def get_tracks(
     event: str = Query(..., description="活動代碼（從 /api/events 選出的 value）"),
     lang: str = Query("tw", description="介面語言"),
 ):
-    """回傳轉蛋格子資料，已依 A/B 欄位分組。"""
+    """回傳轉蛋格子資料，已依 A/B 欄位分組（同組 seed+event+lang 走 in-memory 快取）。"""
     try:
-        html = _client.fetch_track_page(seed=seed, event=event, lang=lang)
+        return _get_tracks_cached(seed=seed, event=event, lang=lang)
     except requests.RequestException as exc:
         raise HTTPException(status_code=502, detail=f"無法連線到 bc.godfat.org：{exc}") from exc
 
+
+@lru_cache(maxsize=256)
+def _get_tracks_cached(seed: str, event: str, lang: str):
+    """實際抓取 + 解析，依 (seed, event, lang) 快取。seed+event+lang 是決定性的，
+    結果不會變，成功的查詢會一直留在快取直到程序重啟或超過 maxsize 被 LRU 淘汰；
+    失敗（RequestException）不會被快取，下次會重新嘗試連線。"""
+    html = _client.fetch_track_page(seed=seed, event=event, lang=lang)
     cells = _pick_parser.parse(html)
     cells = merge_r_cells(cells)
     return to_serializable(group_by_column(cells))

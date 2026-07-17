@@ -1,11 +1,14 @@
 """負責把 HTML 解析成 PickCell 物件（含 R 格子）。"""
 from __future__ import annotations
 
+import logging
 import re
 
 from bs4 import BeautifulSoup, Tag
 
 from .models import PickCell
+
+logger = logging.getLogger(__name__)
 
 _RARITY_PRIORITY = [
     "legend", "found", "exclusive",
@@ -27,12 +30,18 @@ class PickCellParser:
     def parse(self, html: str) -> list[PickCell]:
         soup = BeautifulSoup(html, "html.parser")
         cells = soup.select("td.cat.pick")
+        if not cells:
+            logger.warning(
+                "解析頁面時找不到任何 td.cat.pick 格子，"
+                "可能是網站格式改變或請求被擋，而不是活動本身沒有資料"
+            )
         parsed = (self._parse_cell(cell) for cell in cells)
         return [cell for cell in parsed if cell is not None]
 
     def _parse_cell(self, cell: Tag) -> PickCell | None:
         raw_position = self._extract_position(cell)
         if not raw_position:
+            logger.warning("格子的 onclick 屬性格式跟預期不符，找不到 position，已略過")
             return None
 
         is_r = raw_position.endswith("R")
@@ -42,6 +51,7 @@ class PickCellParser:
         rarity = self._extract_rarity(cell)
         name = self._extract_name(cell)
         if not name:
+            logger.warning("position=%s 的格子找不到貓咪名稱，已略過", position)
             return None
 
         # R 格子才抓 redirect

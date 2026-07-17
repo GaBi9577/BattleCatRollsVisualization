@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import UrlImportForm from './components/UrlImportForm';
 import SeedQueryForm from './components/SeedQueryForm';
 import EventSelect from './components/EventSelect';
@@ -66,6 +66,10 @@ export default function App() {
   const [cache, setCache] = useState({});    // { eventValue: tracks_data }
   const [resultLoading, setResultLoading] = useState(false);
   const [resultError, setResultError] = useState('');
+  // 記錄「使用者目前實際想看的 event」，非同步回應回來時用來判斷是否已過時。
+  const activeEventRef = useRef(null);
+  // 背景抓取的世代編號，每次重新啟動就 +1，讓舊迴圈偵測到後自行停止，避免重入。
+  const backgroundFetchGenRef = useRef(0);
 
   function handleQuerySubmit(query) {
     setBaseQuery(query);
@@ -74,10 +78,14 @@ export default function App() {
 
   // 背景抓取其他 event（靜默失敗，不影響使用者操作）
   async function backgroundFetchRest(primaryValue, currentCache) {
+    // 啟動新一輪背景抓取時世代 +1；舊迴圈偵測到世代不符就自行停止，
+    // 避免兩條背景抓取迴圈同時打 bc.godfat.org。
+    const myGen = ++backgroundFetchGenRef.current;
     const remaining = events.filter(
       (ev) => ev.value !== primaryValue && !(ev.value in currentCache)
     );
     for (const ev of remaining) {
+      if (backgroundFetchGenRef.current !== myGen) return;
       try {
         const data = await fetchTracks({
           seed: baseQuery.seed,
@@ -88,6 +96,7 @@ export default function App() {
       } catch {
         // 背景失敗靜默忽略，之後切換到該 event 時再重試
       }
+      if (backgroundFetchGenRef.current !== myGen) return;
       // 每個請求間隔 1 秒，避免連發觸發 rate limit
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -97,6 +106,7 @@ export default function App() {
     setSelectedEvent(eventValue);
     setResultError('');
     setScreen(SCREENS.RESULT);
+    activeEventRef.current = eventValue;
 
     // 已有快取就不重抓
     if (cache[eventValue]) {
@@ -113,11 +123,21 @@ export default function App() {
       });
       const newCache = { ...cache, [eventValue]: data };
       setCache(newCache);
-      backgroundFetchRest(eventValue, newCache);
+      // 使用者若在等待期間已經切到別的 event，這批快取仍然有用，
+      // 但不該再由這次請求觸發背景抓取（避免跟新的一輪重複）。
+      if (activeEventRef.current === eventValue) {
+        backgroundFetchRest(eventValue, newCache);
+      }
     } catch (err) {
-      setResultError(err.message ?? '查詢失敗，請稍後再試。');
+      if (activeEventRef.current === eventValue) {
+        setResultError(err.message ?? '查詢失敗，請稍後再試。');
+      }
     } finally {
-      setResultLoading(false);
+      // 只有「目前仍是使用者想看的 event」才更新 loading 狀態，
+      // 避免舊請求晚回來把畫面誤設回不 loading。
+      if (activeEventRef.current === eventValue) {
+        setResultLoading(false);
+      }
     }
   }
 
@@ -125,6 +145,7 @@ export default function App() {
   async function handleSwitchEvent(eventValue) {
     setSelectedEvent(eventValue);
     setResultError('');
+    activeEventRef.current = eventValue;
     if (cache[eventValue]) return;
 
     setResultLoading(true);
@@ -136,9 +157,13 @@ export default function App() {
       });
       setCache((prev) => ({ ...prev, [eventValue]: data }));
     } catch (err) {
-      setResultError(err.message ?? '查詢失敗，請稍後再試。');
+      if (activeEventRef.current === eventValue) {
+        setResultError(err.message ?? '查詢失敗，請稍後再試。');
+      }
     } finally {
-      setResultLoading(false);
+      if (activeEventRef.current === eventValue) {
+        setResultLoading(false);
+      }
     }
   }
 

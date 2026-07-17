@@ -65,6 +65,12 @@ export default function SpecialView({
                 const data = cache[event.value];
                 const mates = group.filter((ev) => ev.value !== event.value);
                 const matesCached = mates.every((ev) => cache[ev.value]);
+                // 注意：這裡故意沒有像 ResultColumns.jsx 一樣包 useCallback——
+                // 這段是在 .map() 迴圈裡逐一產生每個活動各自的 getTooltipData，
+                // hooks 規則不允許在迴圈/條件式裡呼叫，包了會違規。
+                // 而且目前 PickCard.jsx／SpecialEventColumns.jsx 都沒有用
+                // React.memo，就算包了 useCallback 也不會真的省到重新渲染，
+                // 所以這裡刻意維持現狀，不是漏做。
                 const getTooltipData =
                   mates.length > 0 && matesCached
                     ? (position) => getMatesForPosition(position, mates, cache)

@@ -1,7 +1,8 @@
 /**
  * 給定一個 position，從 cache 撈出「同組」其他 event 在該位置的 cell。
- * 「同組」由呼叫端決定（一般池／長期池都是依開頭檔期分組，見 eventDuration.js
- * 的 groupEventsByStartDate），不限稀有度，一般池／長期池共用同一套規則。
+ * 「同組」由呼叫端決定，一般池／長期池共用本函式，但分組算法不同：
+ * 一般池是同組全部互比、不分組；長期池則依開頭檔期分組（見 eventDuration.js
+ * 的 groupEventsByStartDate）。本函式不限稀有度。
  *
  * @param {string} position    - 例如 "1A"
  * @param {Array}  mateEvents  - 同組的其他 event（不含自己），[{ value, date_range, title }, ...]
